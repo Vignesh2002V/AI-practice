@@ -1,62 +1,64 @@
-from collections import deque
+def print_grid(matrix):
+    state = matrix.copy()
+    state[state.index(-1)] = "_"
+    print(
+        f"""
+        {state[0]} {state[1]} {state[2]}
+        {state[3]} {state[4]} {state[5]}
+        {state[6]} {state[7]} {state[8]}
+        """
+    )
 
-class Node:
-    def __init__(self,state, parent, action):
-        self.state = state
-        self.parent = parent
-        self.action = action
 
-def bfs(start, goal):
-    queue = deque([Node(start, None, None)])
-    visited = {str(start)}
-    while queue:
-        node = queue.popleft()
-        if node.state == goal:
-            return node
-        for child, action in expand(node):
-            if str(child) not in visited:
-                queue.append(Node(child, node, action))
-                visited.add(str(child))
-    return None
+def gen(state, b, d):
+    x = []
+    for i in d:
+        temp = state.copy()
+        if i == "up":
+            temp[b-3], temp[b] = temp[b], temp[b-3]
+        elif i == "down":
+            temp[b+3], temp[b] = temp[b], temp[b+3]
+        elif i == "right":
+            temp[b+1], temp[b] = temp[b], temp[b+1]
+        elif i == "left":
+            temp[b-1], temp[b] = temp[b], temp[b-1]
+        x.append(temp)
+    return x
 
-def expand(node):
-    children = []
-    x, y = find_blank(node.state)
-    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-        child_x, child_y = x + dx, y + dy
-        if 0 <= child_x < len(node.state) and 0 <= child_y < len(node.state[0]):
-            child_state = [row[:] for row in node.state]
-            child_state[x][y], child_state[child_x][child_y] = child_state[child_x][child_y], child_state[x][y]
-            children.append((child_state, (child_x, child_y)))
-    return children
 
-def find_blank(state):
-    for i in range(len(state)):
-        for j in range(len(state[i])):
-            if state[i][j] == 0:
-                return i, j
+def bfs(src, target):
+    frontier = [src]
+    visited_states = set()
+    while len(frontier):
+        state = frontier.pop(0)
+        print_grid(state)
+        visited_states.add(tuple(state))
+        if(state == target):
+            print("Success")
+            return
+        else:
+            for move in possible_moves(state, visited_states):
+                if move not in frontier:
+                    frontier.append(move)
+    print("Fail")
 
-def print_grid(state):
-    for row in state:
-        print(row)
 
-# Example usage
-start = [[2, 8, 3], [1, 6, 4], [7, 0, 5]]
-goal = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+def possible_moves(state, visited_states):
+    b = state.index(-1)
+    d = []
+    if b not in (0, 1, 2):
+        d.append("up")
+    if b not in (6, 7, 8):
+        d.append("down")
+    if b not in (0, 3, 6):
+        d.append("left")
+    if b not in (2, 5, 8):
+        d.append("right")
+    return [move for move in gen(state, b, d) if tuple(move) not in visited_states]
 
-result = bfs(start, goal)
 
-if result:
-    path = []
-    node = result
-    while node:
-        path.append(node.action)
-        node = node.parent
-    path = path[::-1]
-    print("Moves:", path)
-    print("Start Grid:")
-    print_grid(start)
-    print("Final Grid:")
-    print_grid(goal)
-else:
-    print("No solution found")
+src = [1, 2, 5, -1, 3, 4, 6, 7, 8]
+target = [-1, 1, 2, 3, 4, 5, 6, 7, 8]
+
+
+bfs(src, target)
